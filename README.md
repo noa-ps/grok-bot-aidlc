@@ -78,7 +78,7 @@ People and places
   MAINTAINER_TIME .......... 18:00 daily
   NOTION_PARENT_PAGE ....... <a Notion page I may create the SF databases under>
   OWNER_NOTION_USER ........ <your Notion user, default Owner/Assignee>
-  PROD_RD_DB ............... <optional: your PROD R&D issues DB, read-only, so Notion PM can copy issues you pick into the SF Sprints DB>
+  PROD_RD_DB ............... <optional: the company's main sprint DB (PROD R&D), read-only, so Notion PM can copy issues you pick into your SF Sprints DB queue>
   PRODUCT .................. Prompt Security       (preset, don't ask)
   AGENT_BRAIN_PAGE ......... <optional: the Agent Brain Notion link you can open; Product Expert reads it, read-only>
   DEV_ENV_REPO / ENV_NAME / ENV_URL / EXTEND_TTL_WORKFLOW ... <optional, for Integrations Bot>
@@ -130,7 +130,7 @@ Rules:
 - the private page "PR History", holding Factory Lab (`<NOTION_FACTORY_LAB_DB>`, 4.4) and Factory Lab Iterations (`<NOTION_LAB_ITERATIONS_DB>`, 4.5)
 Start them empty, with the structure in section 4. Never use, copy from or link to any other database. Then fetch each one to confirm it exists and is private. If any is missing, don't create SF Self-Improver yet: finish it first, or report it as blocked in the final report.
 
-The Sprints DB (`<NOTION_SPRINT_DB>`, 4.1) is where the engineer orchestrates their own SF work: they bring the issues they're working on from the existing PROD R&D Notion DB into it. Never create, copy, edit or link anything in the PROD R&D DB.
+The setup bot creates the Sprints DB (`<NOTION_SPRINT_DB>`, 4.1) for the engineer as their own personal work queue for the Software Factory. The company's main sprint DB (PROD R&D) holds all issues; the engineer takes the issues they want the SF team to work on from there and queues them in their own Sprints DB, and the SF bots work from that queue. Never create, copy, edit or link anything in the PROD R&D DB.
 
 Use the Notion connector to create the databases in section 4 under `<NOTION_PARENT_PAGE>`: Sprints, Activity, Misses, Factory Lab and Factory Lab Iterations. Include their properties and page templates (Factory Lab and Factory Lab Iterations have no template). Record each DB's link as `<NOTION_SPRINT_DB>`, `<NOTION_ACTIVITY_DB>`, `<NOTION_MISSES_DB>`, `<NOTION_FACTORY_LAB_DB>`, and `<NOTION_LAB_ITERATIONS_DB>`. Don't create any product-mapping databases (no Platform map, no User scenarios). Create the Misses DB inside a private page, "SF Self-Improvement", not under `<NOTION_PARENT_PAGE>`, and don't share either with anyone (see 4.3). Create Factory Lab and Factory Lab Iterations inside their own private page, "PR History" (see 4.4). Create Factory Lab and Factory Lab Iterations before Misses, because Misses links to them. Some steps may not be possible through the connector: page templates and chart and inline-view settings. If so, leave them for **Computer-Use** after it exists, or list them for the engineer. Notion PM can also take over this step once it exists.
 
@@ -206,7 +206,7 @@ Ask each bot, by id, to run the **Smoke test** on its card and reply PASS or FAI
 Reply with:
 - a table of each bot: name, id, routines created, and smoke test result
 - the rooms and their members
-- the Notion DBs and their links, with one line saying the SF Sprints DB is where the engineer orchestrates their SF work, bringing issues over from their PROD R&D DB
+- the Notion DBs and their links, with one line saying the SF Sprints DB is the engineer's own queue: they take issues from the company's main sprint DB (PROD R&D) and queue them there for the SF team to work on
 - **What still needs you:**
   - connect cards not finished
   - secrets not entered
@@ -366,13 +366,13 @@ On <MAC_NAME>, read the title of Chrome's active tab and the number of open tabs
 
 **Description** (pass to CreateAgent):
 ```text
-Maintains the Software Factory sprint board in Notion, where the engineer orchestrates their own SF work (issues they bring over from the PROD R&D DB): sprints, stories, templates and the "who helped" activity log. Marks stories Shipped when their PR merges and logs each bot's contribution from evidence.
+Maintains the Software Factory sprint board in Notion, which is the engineer's own work queue (issues they take from the company's main sprint DB, PROD R&D, and queue here): sprints, stories, templates and the "who helped" activity log. Marks stories Shipped when their PR merges and logs each bot's contribution from evidence.
 ```
 
 **Instructions message** (send with SendToAgent):
 ```text
 You are the sprint PM for the SF team. You build and maintain sprints and stories in the Notion DB <NOTION_SPRINT_DB>.
-- This is where I orchestrate my own SF work. My issues live in the existing PROD R&D Notion database (all issues, in their sprints); I bring the issues I'm working on from there into <NOTION_SPRINT_DB>, and that's where my SF work is tracked. When I ask, create a story here for an issue I bring from PROD R&D, with its title, key and link. Never edit the PROD R&D database or treat it as yours: read it only if I share it (<PROD_RD_DB>), and only to copy an issue I asked you to bring over.
+- <NOTION_SPRINT_DB> is my own work queue for the SF team. All issues live in the company's main sprint database (PROD R&D); I take the issues I want the SF team to work on from there and queue them in <NOTION_SPRINT_DB>, and that's where my SF work is queued and tracked. When I ask, create a story here for an issue I bring from PROD R&D, with its title, key and link. Never edit the PROD R&D database or treat it as yours: read it only if I share it (<PROD_RD_DB>), and only to copy an issue I asked you to bring over.
 - Every new DB gets a page template, except Factory Lab and Factory Lab Iterations, which have none. Every new row in a DB that has templates is created from the matching template, so it carries the template's icon and structure; creating one without its template is a major violation. Strip template instructions from every new story.
 - Always set Sprint type. Owner and Assignee are <OWNER_NOTION_USER> unless I say otherwise.
 - Every sprint and story on <NOTION_SPRINT_DB> has a Notion-only ID (SF-1, SF-2, … in creation order). It never goes into PR titles, branches or commits, which keep the repos' own keys. Don't add test rows to a database with an automatic ID: each one uses up a number for good.
@@ -973,8 +973,8 @@ Create these under <NOTION_PARENT_PAGE> in the engineer's workspace. Record each
 
 Each one is a new, empty database that belongs to the engineer's own team. Never copy rows from or link to any other database. Every `<NOTION_..._DB>` placeholder means the engineer's own database.
 
-**4.1 `<NOTION_SPRINT_DB>` ("Software Factory Sprints")**: sprints and stories in one DB, with a Parent item relation.
-- **Purpose:** the engineer uses this DB to orchestrate their own SF work. Their issues live in the existing PROD R&D Notion DB (all issues, in their sprints). The engineer brings the issues they're working on from there into this DB, and this is where their SF work is tracked. The SF bots never edit the PROD R&D DB and never treat it as their own; they read it only if the engineer shares it (`<PROD_RD_DB>`, optional).
+**4.1 `<NOTION_SPRINT_DB>` ("Software Factory Sprints")**: the engineer's own work queue, created by the setup bot. Sprints and stories in one DB, with a Parent item relation.
+- **Purpose:** this is a place for the engineer to queue their own work for the SF team. All issues live in the company's main sprint DB (PROD R&D, all issues in their sprints). The engineer takes the issues they want worked on from there and queues them here as stories, and this is where their SF work is queued and tracked. The SF bots never edit the PROD R&D DB and never treat it as their own; they read it only if the engineer shares it (`<PROD_RD_DB>`, optional).
 - Properties:
   - Name (title)
   - ID (unique ID, prefix `SF`; Notion-only, never used in PR titles, branches or commits)
