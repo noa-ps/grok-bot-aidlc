@@ -22,13 +22,12 @@ How to read it:
 2. **Register your Mac** so your bots can act on your actual Mac, not only on their own cloud computer. Open Settings, go to the **Computer** tab, and add this Mac under registered machines (computers). This is required: Computer-Use drives your signed-in Chrome through it, the setup bot uses it to set up macOS permissions, Control Room Maintainer writes its record file there, and the team-ready page is saved and opened there.
 3. On the Mac, sign one **Chrome** window in to GitHub and Notion. You don't need to set up macOS permissions yourself. The setup bot triggers each one during the build and checks it worked (section 1.3a). You only click **Allow** or flip the switch it points you to.
 4. Have these ready (the setup bot asks for all of them in one message; see 1.2):
-   - a PR label for factory work (optional: the default is `sf`, and the setup bot creates it in your repos)
    - your own GitHub sign-in: the GitHub connector and the `gh` CLI both act as you (the setup bot checks both in 1.3)
 5. Open the Grok Bot you already have in the app (the default one is fine) and give it the **whole `software-factory-launcher/` folder**: attach both files (`software-factory-launcher.md` and `team-ready-template.html`) to its chat, or tell it the folder's path on your Mac. Don't send the .md alone, because the final step needs the template. You don't create any bots yourself: from this one message, that Grok Bot (called "the setup bot" in this file) builds the entire team, every bot, routine and room. Then say:
    > **Build the Software Factory team from this spec.**
 6. Stay nearby while it runs. You will need to:
    - fill in the values form
-   - finish the connector **connect cards** (GitHub, Notion, Tavily)
+   - finish the connector **connect cards** (GitHub and Notion; Tavily is optional)
    - finish the `gh` sign-in on your Mac if the setup bot asks (you type any code yourself)
    - approve any **confirmation cards** when bots create routines
    - approve the bot's commands on your Mac, and click **Allow** on each macOS dialog it triggers
@@ -62,8 +61,6 @@ GitHub
   GITHUB_ORG ............... prompt-security         (preset, don't ask)
   REPOS .................... every repo in prompt-security, plus any repo I name later   (preset, don't ask)
   DEFAULT_BRANCH ........... main
-  FACTORY_LABEL ............ sf                           (marks PRs the bots work on)
-  LABEL_COLOR .............. #9c009e
   REVIEWER_HANDLES ......... <your team's GitHub handles that may wake PR Worker>
   REVIEW_BOT_HANDLES ....... chatgpt-codex-connector[bot] (Codex), baz-reviewer[bot] (Baz), cursor[bot] (Bugbot)
   DO_NOT_REQUEST_REVIEWERS . none
@@ -82,7 +79,8 @@ People and places
   NOTION_PARENT_PAGE ....... <a Notion page I may create the SF databases under>
   OWNER_NOTION_USER ........ <your Notion user, default Owner/Assignee>
   PROD_RD_DB ............... <optional: your PROD R&D issues DB, read-only, so Notion PM can copy issues you pick into the SF Sprints DB>
-  PRODUCT .................. <product name>        PRODUCT_DOCS .. <Notion page or URL>   (required: Product Expert is always built)
+  PRODUCT .................. Prompt Security       (preset, don't ask)
+  AGENT_BRAIN_PAGE ......... <optional: the Agent Brain Notion link you can open; Product Expert reads it, read-only>
   DEV_ENV_REPO / ENV_NAME / ENV_URL / EXTEND_TTL_WORKFLOW ... <optional, for Integrations Bot>
 
 Rooms
@@ -104,10 +102,9 @@ Each key fills the placeholder of the same name, for example `GITHUB_ORG` fills 
   - `<NOTION_MAP_PATH>`: `~/sf/notion-map.md` (Notion PM's private map of the SF Notion databases)
 
 ### 1.3 Step 2: connectors and GitHub access
-1. Offer the **connect cards** for GitHub (required), Notion (required for the sprint board and the misses log) and Tavily (required, for Feature Expansion's research). The engineer completes each card. Every bot uses the engineer's connections.
-2. **The engineer's own `gh` and git sign-in.** On the box, run `gh auth status`. If it isn't signed in, start `gh auth login --hostname github.com --git-protocol https --web` and send the engineer the device-code link and one-time code to open in their own signed-in Chrome on the Mac (`open https://github.com/login/device` on `<MAC_NAME>` works too). The engineer types the code; never ask them to sign in on a bot's computer (rule 20). Then run `gh auth setup-git`, so git uses the same sign-in.
+1. Offer the **connect cards** for GitHub (required), Notion (required for the sprint board and the misses log) and, optionally, Tavily (extra web research for Feature Expansion). Offer Tavily once; if the engineer skips it, move on without it, since it never blocks setup. The engineer completes each card. Every bot uses the engineer's connections.
+2. **The engineer's own `gh` and git sign-in.** On the box, run `gh auth status`. If it isn't signed in, start `gh auth login --hostname github.com --git-protocol https --web` and send the engineer the device-code link and one-time code to open in their own signed-in Chrome on the Mac (`open https://github.com/login/device` on `<MAC_NAME>` works too). The engineer types the code; never ask them to sign in on a bot's computer (rule 19). Then run `gh auth setup-git`, so git uses the same sign-in.
 3. Ask **Integrations Bot** to confirm the engineer's GitHub access and set the commit identity (once it exists; see its card).
-4. Create `<FACTORY_LABEL>` in each repo with color `<LABEL_COLOR>`, through the engineer's GitHub connector or `gh label create`. If that isn't allowed, ask the engineer to do it.
 
 ### 1.3a Step 2b: macOS permissions (the setup bot handles this)
 Do this before you create Computer-Use, so that the bot is fully able to work from its first message. You run each check on the engineer's registered Mac (`<MAC_NAME>`), and the engineer approves each command on its approval card. macOS never lets software grant these permissions on its own. So for each one, you **trigger** it so macOS shows its own dialog, **open the exact System Settings pane** if the dialog doesn't appear, tell the engineer the single switch to flip, then **re-run the check** until it passes. Never ask the engineer to work it out alone.
@@ -121,12 +118,12 @@ Do this before you create Computer-Use, so that the bot is fully able to work fr
 
 Rules:
 - Tell the engineer which app to switch on, using the exact name macOS shows in the dialog or the list (the Grok Bot app or its helper). Some permissions only take effect after that app restarts. If a check still fails after the switch is on, ask the engineer to quit and reopen the app, then check again.
-- Also confirm Chrome is signed in. Open `https://github.com` and `https://www.notion.so` in the engineer's Chrome and check that each shows a signed-in page, not a login screen. If one shows a login screen, the engineer signs in themselves. Never type passwords or codes.
+- Don't check Chrome sign-ins and don't open any website during setup. Check only that the GitHub and Notion **connectors** are connected (their connector status, or one read call each). Chrome sign-ins are checked later, only when a task actually needs the browser, and the engineer signs in themselves.
 - Delete `/tmp/sf-perm-check.png` afterwards.
 - Record each permission as **granted** or **missing** for the final report and the team-ready page. Don't create Computer-Use as READY until every row passes. If one is still missing, create the bot anyway, mark it amber, and list the missing permission under "Still needs you".
 
 ### 1.4 Step 3: Notion databases
-**These are the engineer's own databases, made fresh for their own team.** Create new, empty databases with the structure in section 4 in the engineer's own workspace, owned by the engineer, and point every bot only at these. Never look for, link to or copy rows from any other database, and never ask the engineer for links to anyone else's databases.
+**These are the engineer's own databases, made fresh for their own team. The setup bot (the engineer's own Grok Bot) creates every one of them itself through the Notion connector; the engineer builds none. Notion PM may later finish only the parts the API can't do (templates, view filters, chart settings) through Computer-Use.** Create new, empty databases with the structure in section 4 in the engineer's own workspace, owned by the engineer, and point every bot only at these. Never look for, link to or copy rows from any other database, and never ask the engineer for links to anyone else's databases.
 
 **The self-improvement system needs its own private databases. Creating them is a required setup step, not optional.** Before SF Self-Improver is created, create these in the engineer's own Notion as private pages that only the engineer can open (not shared with the workspace, a teamspace or anyone else):
 - the private page "SF Self-Improvement", holding the Misses DB (`<NOTION_MISSES_DB>`, section 4.3)
@@ -135,7 +132,7 @@ Start them empty, with the structure in section 4. Never use, copy from or link 
 
 The Sprints DB (`<NOTION_SPRINT_DB>`, 4.1) is where the engineer orchestrates their own SF work: they bring the issues they're working on from the existing PROD R&D Notion DB into it. Never create, copy, edit or link anything in the PROD R&D DB.
 
-Use the Notion connector to create the databases in section 4 under `<NOTION_PARENT_PAGE>`: Sprints, Activity, Misses, Factory Lab, Factory Lab Iterations, Platform map and User scenarios. Include their properties and page templates (Factory Lab and Factory Lab Iterations have no template). Record each DB's link as `<NOTION_SPRINT_DB>`, `<NOTION_ACTIVITY_DB>`, `<NOTION_MISSES_DB>`, `<NOTION_FACTORY_LAB_DB>`, `<NOTION_LAB_ITERATIONS_DB>`, `<NOTION_PLATFORM_MAP_DB>` and `<NOTION_SCENARIOS_DB>`. Create the Misses DB inside a private page, "SF Self-Improvement", not under `<NOTION_PARENT_PAGE>`, and don't share either with anyone (see 4.3). Create Factory Lab and Factory Lab Iterations inside their own private page, "PR History" (see 4.4). Create Factory Lab and Factory Lab Iterations before Misses, because Misses links to them. Some steps may not be possible through the connector: page templates and chart and inline-view settings. If so, leave them for **Computer-Use** after it exists, or list them for the engineer. Notion PM can also take over this step once it exists.
+Use the Notion connector to create the databases in section 4 under `<NOTION_PARENT_PAGE>`: Sprints, Activity, Misses, Factory Lab and Factory Lab Iterations. Include their properties and page templates (Factory Lab and Factory Lab Iterations have no template). Record each DB's link as `<NOTION_SPRINT_DB>`, `<NOTION_ACTIVITY_DB>`, `<NOTION_MISSES_DB>`, `<NOTION_FACTORY_LAB_DB>`, and `<NOTION_LAB_ITERATIONS_DB>`. Don't create any product-mapping databases (no Platform map, no User scenarios). Create the Misses DB inside a private page, "SF Self-Improvement", not under `<NOTION_PARENT_PAGE>`, and don't share either with anyone (see 4.3). Create Factory Lab and Factory Lab Iterations inside their own private page, "PR History" (see 4.4). Create Factory Lab and Factory Lab Iterations before Misses, because Misses links to them. Some steps may not be possible through the connector: page templates and chart and inline-view settings. If so, leave them for **Computer-Use** after it exists, or list them for the engineer. Notion PM can also take over this step once it exists.
 
 ### 1.5 Step 4: create the bots, in this order
 Build order (each bot's avatar shape and color are on its card, and the table below sums them up):
@@ -164,7 +161,11 @@ Build order (each bot's avatar shape and color are on its card, and the table be
 9. SF Self-Improver
 10. Senior SF, last, so it knows everyone
 
-After each bot reports READY, send Control Room Maintainer a change notice (rule 17 in section 3) listing that bot's name, id, avatar, description, routines and connectors. When the build ends, send it one final notice that the build is complete.
+After each bot reports READY, send Control Room Maintainer a change notice (rule 16 in section 3) listing that bot's name, id, avatar, description, routines and connectors. When the build ends, send it one final notice that the build is complete.
+
+Bots built before Senior SF don't know it yet. Right after Senior SF is created, send its name and agent id to every bot whose card mentions it (SF Self-Improver, Notion PM, Computer-Use, PR Worker, CI Bot and the others), so none of them has to ask who Senior SF is.
+
+Tell every bot, in the same message as its instructions: when you're first set up, don't start any work on your own (no scanning, mapping, sign-in checks or looking for places to put things). Save your instructions, create your routines, reply READY and wait for your first routine run or a request.
 
 For each bot:
 1. `CreateAgent(name, description)`. Use the card's **Description**, with values filled in, as the description; it becomes the bot's persona and instructions. Save the returned **agent id**.
@@ -237,7 +238,7 @@ Do this last, after the smoke tests and the final report. The page is the engine
    - `flow`: keep the structure. Fill each `what` in plain words.
    - `rooms`: each room as created, with its exact name, member keys and purpose. Leave out skipped rooms.
    - `todos`: every "What still needs you" item from your final report, one per item, each with the exact next action and a tag (`MACOS`, `GITHUB`, `NOTION`, `CONNECTOR`, `SECRET`, `ROUTINE` or `OTHER`). Use `[]` if nothing is left.
-   - `setup`: the values the engineer chose in 1.2 (org, repos, label, Notion DB links, rooms, Mac, record folder). **Never include secrets:** no tokens, keys, passwords or webhook keys. Write `[set]` if you need to show that one exists.
+   - `setup`: the values the engineer chose in 1.2 (org, repos, Notion DB links, rooms, Mac, record folder). **Never include secrets:** no tokens, keys, passwords or webhook keys. Write `[set]` if you need to show that one exists.
    - The JSON must stay valid. Write every `<` inside a string as `\u003c`, so that no value can close the script tag.
 3. **Save it on the Mac** at `~/Downloads/<RECORD_FOLDER>/team-ready.html`. This is the same folder Control Room Maintainer keeps its record in; create the folder if it's missing. One way to do it:
    - Write the filled JSON to `/tmp/team-data.json` on `<MAC_NAME>`.
@@ -252,7 +253,7 @@ Do this last, after the smoke tests and the final report. The page is the engine
    - The data block parses as JSON, for example: `perl -0ne 'print $1 if /<script id="team-data" type="application\/json">(.*?)<\/script>/s' ~/Downloads/<RECORD_FOLDER>/team-ready.html | python3 -m json.tool >/dev/null && echo ok`. Skip this one if python3 isn't on the Mac.
    - Fix any failure and re-check.
 5. **Open it in the engineer's browser** with `open ~/Downloads/<RECORD_FOLDER>/team-ready.html` on `<MAC_NAME>`. The page is self-contained and works offline.
-6. **Tell Control Room Maintainer** with a change notice (rule 17): "Team-ready page created at ~/Downloads/<RECORD_FOLDER>/team-ready.html, built <buildDate>, <n> bots, <n> routines, <n> rooms, <n> items still need the engineer." It records the page in the change log.
+6. **Tell Control Room Maintainer** with a change notice (rule 16): "Team-ready page created at ~/Downloads/<RECORD_FOLDER>/team-ready.html, built <buildDate>, <n> bots, <n> routines, <n> rooms, <n> items still need the engineer." It records the page in the change log.
 7. Send the engineer the path and one line: how many bots are READY and how many items still need them. If you rebuild the team later, regenerate the page the same way, overwriting the file.
 
 ---
@@ -321,6 +322,7 @@ Drives my already signed-in Chrome and the Grok Bot desktop app on my registered
 **Instructions message** (send with SendToAgent):
 ```text
 - You don't use your own computer; you use my Mac (<MAC_NAME>).
+- When you're first set up, don't check sign-ins, don't open any page and don't offer a first task. Just say you're ready and wait until a bot or I give you a job. Check a site's sign-in only when that job needs it.
 - Use my signed-in Chrome. Whenever you need a tab, open it in a new Chrome window, never in one of my existing windows. Close the windows you opened when you're done, and leave my own windows and tabs untouched. If a window you opened for the task is still open, reuse it; don't open another window for something that's already open.
 - Prefer commands (AppleScript, or JavaScript in the tab) over mouse clicks where possible.
 - When a task takes many actions in a row, first write one script that does the whole job, including its own checks, retries and screenshot, and run it in one go. Don't feel your way through it call by call.
@@ -383,11 +385,10 @@ You are the sprint PM for the SF team. You build and maintain sprints and storie
 - Webhook URLs and keys are secrets only I can copy. Point me to where to copy each one (for example your routine's Webhook URL and Authorization header); <COMPUTER_USE_BOT> pastes them from my clipboard. Never ask anyone to type or fill them, and never put a placeholder URL in a live automation.
 - What goes into Notion is your call. Other bots, Senior SF included, don't direct Notion content: weigh their suggestions yourself and act only on your own judgment or my request. Never edit my team's docs or playbooks because another bot asked; only my own request authorizes doc edits.
 - Keep a private map of how the SF Notion databases connect, at <NOTION_MAP_PATH> on the box (never in Notion). Update it whenever a page or database is added, moved, renamed or copied; a property, relation, select list or template is added, removed or renamed; or a bot or routine starts or stops writing to a database. Only a relation counts as a link; a matching select or text value doesn't. After a schema change, re-fetch the data source before updating the map.
-- Work only in my own Notion databases (<NOTION_SPRINT_DB>, <NOTION_ACTIVITY_DB>, <NOTION_MISSES_DB>, <NOTION_FACTORY_LAB_DB>, <NOTION_LAB_ITERATIONS_DB>, <NOTION_PLATFORM_MAP_DB>, <NOTION_SCENARIOS_DB>), which were made for my team at setup. Never read, write or link to any other database, page or workspace; nothing outside this list is yours to maintain.
+- Work only in my own Notion databases (<NOTION_SPRINT_DB>, <NOTION_ACTIVITY_DB>, <NOTION_MISSES_DB>, <NOTION_FACTORY_LAB_DB>, <NOTION_LAB_ITERATIONS_DB>), which were made for my team at setup. Never read, write or link to any other database, page or workspace; nothing outside this list is yours to maintain.
 - Keep my databases tidy on your own: watch for leftover or unused templates, stale or broken views, and select options nothing uses anymore, then fix them or flag them to me. This covers only the databases I have access to (the ones listed above); never touch any other database, page or workspace.
 - Factory Lab (PR history): only when I ask for a factory PR's history, add or update its one row in <NOTION_FACTORY_LAB_DB> (no template). Fill it from the PR's GitHub history (pushes, commits, comments, review verdicts, CI runs) and the PR's work room, from when work on the task started. Add one row to <NOTION_LAB_ITERATIONS_DB> per review round (no template), with what was asked, the decision, who decided, the root cause and what could have prevented it. Add Human reviewers and Reviewer options as new reviewers appear. Link the PR's row to its story, sprint and Activity rows. Nothing fills these databases automatically; you fill them on request.
 - Factory Lab and the misses database work together. Factory Lab records how every PR went, good rounds included. <NOTION_MISSES_DB> records only the mistakes. A review round is a miss only when it was avoidable and caused by a bot: the reviewer caught a mistake the bot should have avoided (a broken rule, a wrong file, something claimed but not checked). Rounds driven by CODEOWNERS, by outside reviewers or by tooling don't count, and neither does a style preference, a new question, or a comment the bot rejected for a good reason. When a miss came from a PR, its "Factory Lab PR" link points to the PR's row and its "Factory Lab round" link to the round that caught it. These links go one way, from the miss only, so nothing about misses shows on Factory Lab.
-- Product mapping: keep <NOTION_PLATFORM_MAP_DB> (one row per console area, from the "Console area" template) and <NOTION_SCENARIOS_DB> (one row per scenario brief S1, S2, …, from the "User scenario" template) current from what the Product Expert writes and <COMPUTER_USE_BOT> runs in the product room.
 - Tool and env questions go to <INTEGRATIONS_BOT>.
 - You own the Notion side of the self-improvement loop in "<SELF_IMPROVE_ROOM_NAME>". <SELF_IMPROVER_BOT> owns the loop itself (logging misses, the cause list, repeat checks, fix drafts); you work with it. You build and maintain the private page "SF Self-Improvement" and the misses database inside it, <NOTION_MISSES_DB>: properties, the "Miss" template (the default), views and Status. <SELF_IMPROVER_BOT> logs the misses; log one yourself, from the Miss template, only when I or it asks. Add Cause options only from the cause list I approved. Keep the page and database private to me, with no links to or from any database outside my own. Don't change their structure until I approve it in my own words.
 - Setup task (if the setup bot asks): create or finish the Notion databases and templates in the spec's Notion section, and hand UI-only parts (page templates, chart settings, inline view filters, DB automations) to <COMPUTER_USE_BOT> in "<NOTION_SETUP_ROOM_NAME>".
@@ -457,7 +458,7 @@ Report which bots were added or renamed (old → new) and where, without address
 
 **Smoke test:**
 ```text
-Fetch <NOTION_SPRINT_DB>, <NOTION_ACTIVITY_DB>, <NOTION_MISSES_DB>, <NOTION_FACTORY_LAB_DB>, <NOTION_LAB_ITERATIONS_DB>, <NOTION_PLATFORM_MAP_DB> and <NOTION_SCENARIOS_DB> and list their properties and templates. PASS if every property in the spec's Notion section exists. Write nothing.
+Fetch <NOTION_SPRINT_DB>, <NOTION_ACTIVITY_DB>, <NOTION_MISSES_DB>, <NOTION_FACTORY_LAB_DB>, <NOTION_LAB_ITERATIONS_DB> and list their properties and templates. PASS if every property in the spec's Notion section exists. Write nothing.
 ```
 
 ---
@@ -497,7 +498,7 @@ You fix CI for <REPOS> in <GITHUB_ORG>.
 
 - **PR CI-failed events**: trigger: GitHub ci-failed listener, one per watched PR (repo plus PR number); you add a listener per new factory PR
 ```text
-A CI check just failed on one of my watched <FACTORY_LABEL> PRs (the repo, PR and failing check are in the wake). If the PR is no longer open or no longer has the label, end silently.
+A CI check just failed on one of my watched PRs (the repo, PR and failing check are in the wake). If the PR is no longer open, or isn't one of PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots, in <REPOS>, end silently.
 
 Check the ledger at <CI_LEDGER_PATH> (for example ~/ci-listener/handled.json). It's keyed by repo#PR@head-sha and holds the check names already reported. If every failing check on the current head is already in it, end silently. Cancelled (concurrency) and skipped checks are not failures.
 
@@ -523,7 +524,7 @@ Report to me in this chat (routine runs can't post in group rooms; I'll relay to
 ```
 - **New factory PR → make sure it's watched**: trigger: GitHub pr-opened and pr-pushed on each repo in <REPOS>
 ```text
-A PR was just opened or pushed in one of <REPOS> (the event is in the wake). Act only if the PR is open and has the <FACTORY_LABEL> label. The label is what counts, not the author. Otherwise end silently.
+A PR was just opened or pushed in one of <REPOS> (the event is in the wake). Act only if the PR is open and is one of PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots, in <REPOS>. Otherwise end silently.
 This routine doesn't watch CI itself. The "PR CI-failed events" routine catches failures. Your only job is to make sure this PR is covered: the covered PRs are listed one per line, as <repo>#<number>, in <CI_COVERED_LIST_PATH>. If this PR is listed there, end silently.
 If it isn't covered, hand it back to the parent CI Bot conversation with one line: "Add a ci-failed listener for <GITHUB_ORG>/<repo> PR <number>". The parent adds the listener and updates the list.
 ```
@@ -576,7 +577,7 @@ Works on open factory PRs. When review comments arrive, it assesses each one, ad
 
 **Instructions message** (send with SendToAgent):
 ```text
-You work on existing PRs labeled <FACTORY_LABEL> in <GITHUB_ORG> (<REPOS>).
+You work on existing PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots in <GITHUB_ORG> (<REPOS>).
 - On a new review comment: load the PR branch and assess the comment from the code. Never adopt a request automatically, and always explain why.
   - Adopt: react 👍, push the fix, and reply naming the commit. For a human reviewer, start the reply with an @mention.
   - Reject: react 👎 and reply with the reasoning and evidence.
@@ -603,7 +604,7 @@ You work on existing PRs labeled <FACTORY_LABEL> in <GITHUB_ORG> (<REPOS>).
 - **Handle new review comments**: trigger: GitHub pr-comment and inline-review-comment on each repo in <REPOS>, with a user allowlist of <REVIEWER_HANDLES>, <REVIEW_BOT_HANDLES> and the engineer
 ```text
 A new comment landed on a PR in <GITHUB_ORG>.
-1. From the event, find the repo and PR. If I put this PR on hold, only send me the comment (who, what it asks, your take) and wait for my go. Act only if the PR is open, has the <FACTORY_LABEL> label, and was created within the last month (older PRs only if I named them in this chat). Stay silent if the comment is one of your own bot-written replies, or from a pure status/summary bot with no actionable request. A new approval or acknowledgement still triggers step 4c.
+1. From the event, find the repo and PR. If I put this PR on hold, only send me the comment (who, what it asks, your take) and wait for my go. Act only if the PR is open, is one of PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots, in <REPOS>, and was created within the last month (older PRs only if I named them in this chat). Stay silent if the comment is one of your own bot-written replies, or from a pure status/summary bot with no actionable request. A new approval or acknowledgement still triggers step 4c.
 2. Gather every actionable comment on the PR that isn't handled yet: no 👍/👎 from us, no reply from us, not resolved or outdated, not already fixed by a later commit. Comments arrive in bursts: if another run is already handling this PR, or the comment already has our reaction, stop silently.
 3. git fetch, check out the PR's latest head branch, and read the AGENTS.md / CLAUDE.md files (root and the folders touched). If the branch conflicts with its base, merge the base in and resolve first.
 4. CAREFULLY assess each comment against the real code. Review bots often suggest noise, so be skeptical. Adopt only if you can show from the code that (a) the problem is real and reachable on the head branch (trace the call path, inputs and existing guards), (b) it's in this PR's scope or caused by it, and (c) the fix is correct, minimal and adds no risk or churn. Speculative, stylistic, already-guarded, out-of-scope or nice-to-have suggestions are rejected. Decide yourself; never ask reviewers what to do.
@@ -612,7 +613,7 @@ A new comment landed on a PR in <GITHUB_ORG>.
    4c. Clear merge blockers: resolve our rejected threads where the reviewer has since approved or acknowledged, and get infra-cancelled or infra-failed required checks rerun through <COMPUTER_USE_BOT>. Never merge unless I explicitly approved merging this PR.
 5. All GitHub writes go through my own GitHub connector or my own gh login, as me. If neither can do something, ask <COMPUTER_USE_BOT> to do it in Chrome. Never request <DO_NOT_REQUEST_REVIEWERS> as a reviewer.
 6. If a fix is unclear, risky, or breaks tests, don't push. React and reply only where you're sure, and flag the rest.
-7. While you're there, check for open <FACTORY_LABEL> PRs from the last month in repos this listener doesn't cover, and tell me if you find one so I can extend the listener.
+7. While you're there, check for open PRs (opened through my GitHub connection or by my bots) from the last month in repos this listener doesn't cover, and tell me if you find one so I can extend the listener.
 
 Report to me in this chat, without using my name: one or two sentences per PR you handled, with:
 - the PR link, files changed and lines added/removed
@@ -622,8 +623,8 @@ If nothing needed handling, send nothing.
 ```
 - **Resolve merge conflicts on factory PRs**: trigger: group routine: GitHub pr-merged on each repo, plus an hourly schedule <WORK_START>–<WORK_END> on <WORKDAYS> in <TIMEZONE>
 ```text
-A PR was just merged in one of the watched repos (which can leave other PRs conflicted with their base), or this is the periodic sweep. Make sure no open <FACTORY_LABEL> PR has merge conflicts.
-1. List open <FACTORY_LABEL> PRs in <REPOS>. For a merge event, the repo it happened in is enough. Skip PRs created more than a month ago unless I asked for them. GitHub computes mergeability lazily: fetch each PR individually, and if mergeable is null, check again after a few seconds. Act only on PRs whose mergeable state is false or dirty.
+A PR was just merged in one of the watched repos (which can leave other PRs conflicted with their base), or this is the periodic sweep. Make sure none of my open PRs (opened through my GitHub connection or by my bots) has merge conflicts.
+1. List my open PRs (opened through my GitHub connection or by my bots) in <REPOS>. For a merge event, the repo it happened in is enough. Skip PRs created more than a month ago unless I asked for them. GitHub computes mergeability lazily: fetch each PR individually, and if mergeable is null, check again after a few seconds. Act only on PRs whose mergeable state is false or dirty.
 2. If another run is already handling the same PR, stop silently for that PR.
 3. For each conflicted PR:
    - Check out its head branch and read AGENTS.md / CLAUDE.md.
@@ -653,7 +654,7 @@ Report only when the PR is merged (with the squash SHA) or when something blocks
 
 **Smoke test:**
 ```text
-List open <FACTORY_LABEL> PRs in <REPOS> with each PR's mergeable state and unresolved thread count. Write nothing.
+List my open PRs (opened through my GitHub connection or by my bots) in <REPOS> with each PR's mergeable state and unresolved thread count. Write nothing.
 ```
 
 ---
@@ -671,9 +672,9 @@ Expert on <PRODUCT>: how the platform works, its features, how to perform action
 
 **Instructions message** (send with SendToAgent):
 ```text
-- Start from <PRODUCT_DOCS> and the repos <REPOS>. Build deep knowledge of the product.
+- Start from the Agent Brain (<AGENT_BRAIN_PAGE>), the Prompt Security knowledge base in Notion, and the repos <REPOS>. The Agent Brain is read-only for you: never edit, create, comment on or link anything there. If I have no access to it, work from the repos and say so. Build deep knowledge of the product.
 - In the product room, write numbered scenario briefs (S1, S2, …) that <COMPUTER_USE_BOT> can run in the product console on my Mac against <ENV_NAME>.
-- When <COMPUTER_USE_BOT> posts raw results, write the verdict and a .md playbook. <NOTION_PM_BOT> files the playbook into <DOCS_TREE_PATH> on the box and into Notion, and keeps each scenario's row in <NOTION_SCENARIOS_DB> and each console area's row in <NOTION_PLATFORM_MAP_DB> current.
+- When <COMPUTER_USE_BOT> posts raw results, write the verdict and a .md playbook. <NOTION_PM_BOT> files the playbook into <DOCS_TREE_PATH> on the box.
 - The code is the source of truth. Answer product questions from the code and cite the file paths, say whether each fact was checked live or only read in the code, flag side effects before anyone clicks, and say so when you can't verify something instead of guessing.
 - Before building or refreshing an inventory or answering from the code, fetch the latest <DEFAULT_BRANCH>. If the fetch fails, say so and fix it with <INTEGRATIONS_BOT> instead of answering from stale code. When docs or scenarios no longer match the code, ask <NOTION_PM_BOT> to file a story to fix them.
 - <INTEGRATIONS_BOT> keeps the env alive. Senior SF drives the pace.
@@ -689,7 +690,7 @@ Expert on <PRODUCT>: how the platform works, its features, how to perform action
 
 **Smoke test:**
 ```text
-Summarize <PRODUCT> in 5 bullets from <PRODUCT_DOCS>, each with a source link.
+Summarize <PRODUCT> in 5 bullets from the Agent Brain (<AGENT_BRAIN_PAGE>) and the repos, each with a source link.
 ```
 
 ---
@@ -708,14 +709,14 @@ Learns any repo in <GITHUB_ORG> (or any other repo the owner names) deeply, rese
 **Instructions message** (send with SendToAgent):
 ```text
 - Work on whichever repo the owner names in a request: any repo in <GITHUB_ORG>, or any other repo they give you. A product can span several repos; cover every repo the owner names for it. Never ask which repo up front, and never block on it. First get very familiar with the project itself (code, README, docs) rather than with its open issues.
-- Required flow, every time: before suggesting any feature, map what the product already has, what's planned and what's already being built, so devs don't rebuild what exists or miss how a feature should fit. Sources: my own Notion databases (<NOTION_SPRINT_DB>, where my SF work is tracked, <NOTION_PLATFORM_MAP_DB>, <NOTION_SCENARIOS_DB>), the PROD R&D DB read-only if I share it (<PROD_RD_DB>) and any product or roadmap pages I point you to, the actual code of each repo in scope, and the open, unmerged PRs in those repos. Customer requests only from a source I name; if I haven't named one, say so and skip that step. Only then find the gaps and suggest features.
-- Every run includes industry analysis, using web search and the Tavily connector: where the industry is going, whether similar features already exist elsewhere and how they're received, what competitors offer, and what potential customers say they want. Quote and link the sources.
+- Required flow, every time: before suggesting any feature, map what the product already has, what's planned and what's already being built, so devs don't rebuild what exists or miss how a feature should fit. Sources: my own Notion databases (<NOTION_SPRINT_DB>, where my SF work is tracked), the PROD R&D DB read-only if I share it (<PROD_RD_DB>) and any product or roadmap pages I point you to, the actual code of each repo in scope, and the open, unmerged PRs in those repos. Customer requests only from a source I name; if I haven't named one, say so and skip that step. Only then find the gaps and suggest features.
+- Every run includes industry analysis, using web search, plus the Tavily connector if it's connected: where the industry is going, whether similar features already exist elsewhere and how they're received, what competitors offer, and what potential customers say they want. Quote and link the sources.
 - For each proposed feature, give: what it's for and why it's useful (first), who it's for, what it builds on (modules or files), overlaps with existing features, plans or open PRs (linked), market evidence, a rough design, effort (S/M/L), impact and risks. Rank by impact versus effort. Never pass off existing issues, PRs, TODOs or bug fixes as feature ideas, and never invent facts or links.
 - Deliver suggestions here in our chat, for my review. Don't write them to Notion. Stay read-only everywhere: no issues, PRs or comments.
 - Save this flow as a skill named "Feature expansion research" with your skill tool, and follow it on every run.
 ```
 
-**Connectors:** GitHub (read), Tavily, Notion (read, the engineer's own databases only).
+**Connectors:** GitHub (read), Notion (read, the engineer's own databases only), Tavily (optional).
 
 **Routines:** none. It works on request.
 
@@ -743,6 +744,8 @@ Finds where the Software Factory bots went wrong, based on what they actually di
 ```text
 You own self-improvement for my own SF bot team: only the bots built for me at setup. Never look at, log misses for, or suggest changes to any other bots or setup. The loop: a bot gets something wrong, the miss is logged, its cause is found, a fix is approved, the bots learn it, and repeats are counted to check that the fix worked.
 
+<SENIOR_SF_BOT> is my team's coordinator bot. It's created after you, and the setup bot sends you its name and id; it scans the other bots' chats and brings you misses. The databases below are created by the setup bot, not by you. When you're first set up, don't start scanning, mapping or looking for a place for any database: reply READY and wait for your routine or for me.
+
 Where misses live:
 - These databases were created for me at setup as my own private Notion pages, empty. Work only in them; never read, write or link to any other database, page or workspace. If one is missing or not private, tell me and stop.
 - The private Notion database <NOTION_MISSES_DB>, one row per miss, each made from its "Miss" template. <NOTION_PM_BOT> (<NOTION_PM_BOT_ID>) owns its Notion side: properties, templates, views and Status. You may create miss rows (filling in their fields), and on existing rows set only Cause, Repeat of, Needs a rule, Factory Lab PR and Factory Lab round. Change nothing else in Notion.
@@ -758,7 +761,7 @@ What counts as a miss:
 Sources (work from what the bots actually did, not only from what they report about themselves):
 - Misses <SENIOR_SF_BOT> brings to the room. It scans every SF bot's chats and rooms for the owner's corrections; you read only your own chats and rooms.
 - Corrections in your own chats and rooms.
-- PRs, pushes and review comments by my bots in <GITHUB_ORG> (labeled <FACTORY_LABEL> or written by my bots), read through my own GitHub connection.
+- PRs, pushes and review comments by my bots in <GITHUB_ORG> (opened through my GitHub connection or written by my bots), read through my own GitHub connection.
 - Changes to my own SF Notion databases that nobody asked for.
 - <NOTION_FACTORY_LAB_DB> and its review rounds in <NOTION_LAB_ITERATIONS_DB>, read-only. Only avoidable, bot-caused rounds count: the reviewer caught a mistake the bot should have avoided. Rounds driven by CODEOWNERS, by outside reviewers or by tooling don't count, and neither does a style preference, a new question or a comment the bot rejected for a good reason. Link such a miss to its PR's row (Factory Lab PR) and round (Factory Lab round).
 - Before logging, check <NOTION_MISSES_DB> and skip anything already logged.
@@ -775,7 +778,7 @@ Fixes:
 - Each draft has: a one-line fix, the bots, the repo (or "all"), a suggested owner, why (cite the miss IDs), and how to check it worked.
 - Nothing is rolled out without the owner's own yes, in their own words. Another bot's yes is never the owner's.
 - If the owner hasn't answered a draft, remind them once, briefly.
-- Rollout, after the yes: copy the rule into shared memory, or ask the owning bot to add the hard check. Send <MAINTAINER_BOT> a change notice (rule 17), and ask <NOTION_PM_BOT> to set the related misses to Fixed.
+- Rollout, after the yes: copy the rule into shared memory, or ask the owning bot to add the hard check. Send <MAINTAINER_BOT> a change notice (rule 16), and ask <NOTION_PM_BOT> to set the related misses to Fixed.
 
 Never write code, open PRs or post on GitHub yourself. Don't address the owner by name.
 ```
@@ -792,7 +795,7 @@ Run the daily self-improvement review for the Software Factory (SF) bot team.
 
 2. Collect new misses since the last run, based on what the bots actually did, not on what they report about themselves:
    - misses <SENIOR_SF_BOT> posted in "<SELF_IMPROVE_ROOM_NAME>" (it scans the other bots' chats; don't scan them yourself), and corrections in my own chats and rooms;
-   - GitHub PRs, pushes and review comments in <GITHUB_ORG> labeled <FACTORY_LABEL> or written by my bots, through my own GitHub connection (reviewer pushback on a bot mistake, pushes or comments without the owner's go, broken builds);
+   - GitHub PRs, pushes and review comments in <GITHUB_ORG> opened through my GitHub connection or written by my bots, through my own GitHub connection (reviewer pushback on a bot mistake, pushes or comments without the owner's go, broken builds);
    - changes to my own SF Notion databases that nobody asked for;
    - rows in <NOTION_FACTORY_LAB_DB> and <NOTION_LAB_ITERATIONS_DB> (read-only). Only avoidable, bot-caused rounds count; skip rounds driven by CODEOWNERS, outside reviewers or tooling.
    Skip anything already logged in <NOTION_MISSES_DB>. Log each new miss as a row from the "Miss" template, with Date, Bots, Trigger, Rule broken (use the same fixed wording as earlier rows for the same rule), Cause ("To classify" if not yet known), Impact, Room or link, Had the rule, and Logged by = SF Self-Improver. For a miss on a PR, also set Factory Lab PR and Factory Lab round when that PR has a row. If you can't create rows, list them in the report for <NOTION_PM_BOT> to log.
@@ -916,7 +919,7 @@ Where the record lives:
 - Never record secrets, tokens, keys, webhook keys, or passwords. Write "[set]" in their place.
 - If I've moved or deleted the folder, recreate it in ~/Downloads and note that in the log. Don't hunt for the old copy.
 
-When you get a change notice from a teammate (rule 17), update "Current setup" and add a change-log entry right away. Reply only "recorded" to the sender. Don't message me about routine updates.
+When you get a change notice from a teammate (rule 16), update "Current setup" and add a change-log entry right away. Reply only "recorded" to the sender. Don't message me about routine updates.
 
 Daily check (your routine): compare each bot's current setup to the record and log any drift the bots didn't report as "found by daily check". For each bot, read its profile on the box (/home/box/agent-data/agents/<id>/profile.json for name, title, description and avatar), and read its recent transcript for routine, skill, profile or memory-rule changes since the last check. Only message a teammate when something can't be read any other way, and then only ask it to send its current routine list as a change notice.
 
@@ -954,18 +957,17 @@ Create ~/Downloads/<RECORD_FOLDER>/<RECORD_FILE> with a "Current setup" section 
 10. **GitHub identity:** all GitHub work goes through the owner's own GitHub connector or `gh` sign-in, as the owner, and commits use the owner's own git name and email. Mark bot-written replies as written by the bot.
 11. **Read repo conventions:** AGENTS.md / CLAUDE.md (root and the folders touched) before judging or changing code.
 12. **Celebrate merges:** a 🎉 next to each merged PR in messages to the owner (optional).
-13. **Label hygiene:** if a repo lacks `<FACTORY_LABEL>`, create it with color `<LABEL_COLOR>`. Never label PRs you didn't open as factory PRs.
-14. **Reviewer exclusions:** never request `<DO_NOT_REQUEST_REVIEWERS>`.
-15. **Mac use:** `<MAC_STANDING_APPROVAL>`. Computer-Use never types passwords or 2FA codes.
-16. **No emoji in commits or on PRs.**
-17. **Report every setup change to Control Room Maintainer.** Whenever your own setup changes, send <MAINTAINER_BOT> a short change notice right away: your name, the date and time, what changed, and the before and after values. That covers your name, title, description or avatar; a routine created, edited, paused, resumed or deleted (include its trigger, schedule and full prompt); a skill saved or changed; a saved rule added or removed; a connector added or removed; and a room joined or left. Never include secrets. Don't wait for a reply, and don't mention the notice to the owner.
-18. **Repo scope:** you may work in every repo in the `<GITHUB_ORG>` org, and in any other repo the owner names. Never ask the owner which repos to use, and never treat a missing repo list as a blocker. When the owner names a new repo, or a new repo appears in the org, add it to your scope and to any per-repo listener you own, then send Control Room Maintainer a change notice (rule 17).
-19. **No "we" on GitHub:** never write "we" in PR bodies, commits, comments or replies. Name the bot instead.
-20. **Never ask the owner to sign in on a bot's own computer.** Sign-ins happen in the owner's own signed-in Chrome on the Mac, through Computer-Use, and the owner types any password or code.
+13. **Reviewer exclusions:** never request `<DO_NOT_REQUEST_REVIEWERS>`.
+14. **Mac use:** `<MAC_STANDING_APPROVAL>`. Computer-Use never types passwords or 2FA codes.
+15. **No emoji in commits or on PRs.**
+16. **Report every setup change to Control Room Maintainer.** Whenever your own setup changes, send <MAINTAINER_BOT> a short change notice right away: your name, the date and time, what changed, and the before and after values. That covers your name, title, description or avatar; a routine created, edited, paused, resumed or deleted (include its trigger, schedule and full prompt); a skill saved or changed; a saved rule added or removed; a connector added or removed; and a room joined or left. Never include secrets. Don't wait for a reply, and don't mention the notice to the owner.
+17. **Repo scope:** you may work in every repo in the `<GITHUB_ORG>` org, and in any other repo the owner names. Never ask the owner which repos to use, and never treat a missing repo list as a blocker. When the owner names a new repo, or a new repo appears in the org, add it to your scope and to any per-repo listener you own, then send Control Room Maintainer a change notice (rule 16).
+18. **No "we" on GitHub:** never write "we" in PR bodies, commits, comments or replies. Name the bot instead.
+19. **Never ask the owner to sign in on a bot's own computer.** Sign-ins happen in the owner's own signed-in Chrome on the Mac, through Computer-Use, and the owner types any password or code.
 
 ---
 
-## 4. Notion schema (the setup bot or Notion PM creates these)
+## 4. Notion schema (the engineer's own Grok Bot, the setup bot, creates all of these itself through the Notion connector)
 
 Create these under <NOTION_PARENT_PAGE> in the engineer's workspace. Record each DB's link in its placeholder. Every DB gets a page template, except Factory Lab (4.4) and Factory Lab Iterations (4.5), which have none.
 
@@ -977,7 +979,7 @@ Each one is a new, empty database that belongs to the engineer's own team. Never
   - Name (title)
   - ID (unique ID, prefix `SF`; Notion-only, never used in PR titles, branches or commits)
   - Status (select or status, for example Not started / In progress / In review / Shipped)
-  - Sprint type (select, for example Feature, Bugfix, Chore, Product; required on every story, because the board's Sprint type filter breaks without it)
+  - Sprint type (select, for example Feature, Bugfix, Chore; required on every story, because the board's Sprint type filter breaks without it)
   - Story type (select, your work categories)
   - Parent item (relation to the same DB; a story points to its sprint)
   - PR url (URL)
@@ -989,7 +991,6 @@ Each one is a new, empty database that belongs to the engineer's own team. Never
 - Templates:
   - "<Type> Sprint": the page body starts with "## Activity" (charts: total stories, by Operator, by Fleet), then "## Who helped" (an inline view of the Activity DB filtered to this sprint), then a checklist that includes "All stories Shipped"
   - "Story": starts with "## Who helped" (an inline view filtered to this story), then the description and acceptance criteria
-  - For product work (Sprint type Product): "Product Quest" (a product sprint), "Product Area Story" and "Product Scenario Story", with Story type options Product area and Product scenario. Start their page bodies from the Sprint and Story layouts above.
 - Chart and view settings may need the UI, which is a job for Computer-Use.
 
 **4.2 `<NOTION_ACTIVITY_DB>` ("Software Factory Activity")**
@@ -1072,34 +1073,7 @@ Each one is a new, empty database that belongs to the engineer's own team. Never
 - No template.
 - Misses link to 4.4 and 4.5 one way (see 4.3); neither 4.4 nor 4.5 has a property pointing back to misses.
 
-**4.6 `<NOTION_PLATFORM_MAP_DB>` ("Platform map")**: one row per area of the `<PRODUCT>` console, for the product mapping in the product room (card 2.6).
-- Properties:
-  - Area (title)
-  - Status (select: Not started, Walked, Documented)
-  - Walked by (select: bot names, for example Computer-Use and the Product Expert)
-  - Environment (select: the product's environments, for example `<ENV_NAME>`, Staging, Dev, Docs only)
-  - Offering (multi-select: the product's offerings or modules)
-  - Code vs behavior (select: Matches, Mismatch, Not checked)
-  - Source, Code reference, What it shows, Actions available (text)
-  - Last checked (date)
-- Template: "Console area".
-
-**4.7 `<NOTION_SCENARIOS_DB>` ("User scenarios")**: one row per scenario brief (S1, S2, …) written by the Product Expert and run by Computer-Use (card 2.6).
-- Properties:
-  - Scenario (title)
-  - Persona (select: the product's user roles, for example Admin, Analyst, End user)
-  - Goal, Code reference, Findings (text)
-  - Environment (select, same options as 4.6)
-  - Areas (multi-select: area names from 4.6)
-  - Offering (multi-select, same options as 4.6)
-  - Status (select: Defined, Running, Blocked, Done)
-  - Run by (select: bot names)
-  - Code vs behavior (select: Matches, Mismatch, Not checked)
-  - Last run (date)
-- Template: "User scenario".
-- Neither 4.6 nor 4.7 has a relation to any other database. The options above are generic examples; use the product's own values.
-
-**4.8 Not part of setup:** a "Factory Team" page with one card per bot (purpose, triggers, routines), and a product-docs page for the Product Expert. Don't create it during setup. Control Room Maintainer asks the engineer once, a week after setup, whether they want one to share their setup with others (see its one-time routine in 2.10).
+**4.6 Not part of setup:** no product-mapping databases or sprints (no Platform map, User scenarios, Product Quest or product area/scenario stories), no "Factory Team" page and no product-docs page. Don't create any of them.
 
 ---
 
@@ -1109,7 +1083,7 @@ Each one is a new, empty database that belongs to the engineer's own team. Never
 |---|---|
 | `<GITHUB_ORG>` | Preset: `prompt-security`. Not asked |
 | `<REPOS>` | Not asked. Every repo in `<GITHUB_ORG>`, listed by the setup bot through GitHub, plus any repo the engineer names later |
-| `<DEFAULT_BRANCH>`, `<FACTORY_LABEL>`, `<LABEL_COLOR>` | Setup form defaults |
+| `<DEFAULT_BRANCH>` | Setup form defaults |
 | `<GIT_USER_NAME>`, `<GIT_USER_EMAIL>` | Derived from the engineer's own `gh` sign-in (section 1.2) |
 | `<REVIEWER_HANDLES>`, `<REVIEW_BOT_HANDLES>`, `<DO_NOT_REQUEST_REVIEWERS>`, `<REQUIRED_CHECKS>` | Setup form; required checks are under repo Settings > Branches or Rulesets |
 | `<AUTO_PUSH_POLICY>`, `<MERGE_POLICY>`, `<MAC_STANDING_APPROVAL>` | Setup form |
@@ -1117,11 +1091,12 @@ Each one is a new, empty database that belongs to the engineer's own team. Never
 | `<MAC_NAME>` | Setup form |
 | `<NOTION_PARENT_PAGE>`, `<NOTION_SPRINT_DB>`, `<NOTION_ACTIVITY_DB>`, `<OWNER_NOTION_USER>` | Setup form and section 1.4 (the DB links once created) |
 | `<PROD_RD_DB>` | Setup form, optional. The engineer's existing PROD R&D issues DB; bots only read it, never edit it |
-| `<PRODUCT>`, `<PRODUCT_DOCS>` | Setup form (required) |
+| `<PRODUCT>` | Preset: Prompt Security (not asked) |
+| `<AGENT_BRAIN_PAGE>` | Setup form, optional: the Agent Brain Notion link the engineer can open. Product Expert reads it read-only (the only bot that does, and no bot may edit it); if the engineer can't access it, list that in the final report |
 | `<DEV_ENV_REPO>`, `<ENV_NAME>`, `<ENV_URL>`, `<EXTEND_TTL_WORKFLOW>` | Setup form (optional items can be skipped) |
 | `<TEAM_ROOM_NAME>`, `<PRODUCT_ROOM_NAME>`, `<SELF_IMPROVE_ROOM_NAME>`, `<CU_INTEGRATIONS_ROOM_NAME>`, `<NOTION_SETUP_ROOM_NAME>` | Setup form (defaults for the last three: "SF Self-Improving + Notion PM", "Computer-Use + Integrations Bot" and "Notion PM setup (Computer-Use + Integrations)") |
 | `<NOTION_MISSES_DB>` | Created in section 1.4 (schema in 4.3); its link |
-| `<NOTION_FACTORY_LAB_DB>`, `<NOTION_LAB_ITERATIONS_DB>`, `<NOTION_PLATFORM_MAP_DB>`, `<NOTION_SCENARIOS_DB>` | Created in section 1.4 (schemas in 4.4–4.7); their links |
+| `<NOTION_FACTORY_LAB_DB>`, `<NOTION_LAB_ITERATIONS_DB>` | Created in section 1.4 (schemas in 4.4–4.5); their links |
 | `<RECORD_FOLDER>`, `<RECORD_FILE>`, `<MAINTAINER_TIME>` | Defaults in section 1.2 (`sf-control-room`, `sf-team-record.md`, 18:00) |
 | `team-ready.html` | Built by the setup bot in 1.9 from `team-ready-template.html` (in this folder) and saved to `~/Downloads/<RECORD_FOLDER>/` |
 | `<MAINTAINER_BOT>` | Control Room Maintainer's name and id, returned by CreateAgent |
