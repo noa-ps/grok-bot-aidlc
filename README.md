@@ -1,6 +1,6 @@
 ![Grok Bot: Software Factory team](assets/header.png)
 
-# Software Factory spec: one file that builds your bot team
+# Build your own software factory team with Grok Bot
 
 This file is a **build spec**. Give it to a Grok Bot of your own and it creates the whole Software Factory (SF) team: ten bots, all required, plus their routines, memory and group rooms. Everything runs on your accounts: your GitHub, your Notion, your Mac. Every value you supply appears as a `<PLACEHOLDER>`.
 
