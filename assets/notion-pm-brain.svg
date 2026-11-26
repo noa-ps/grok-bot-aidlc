@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="800" height="800" role="img" aria-label="A brain with two eyes, in the style of the Grok Bot avatars">
+  <defs>
+    <linearGradient id="g" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#FF6FB0"/>
+      <stop offset="0.55" stop-color="#F93498"/>
+      <stop offset="1" stop-color="#9B5CF6"/>
+    </linearGradient>
+    <filter id="spray" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="9" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4.2 0 0 0 -0.55" result="speck"/>
+      <feComposite in="rough" in2="speck" operator="in"/>
+    </filter>
+  </defs>
+  <g filter="url(#spray)">
+    <path fill="url(#g)" d="M118 210 C92 190 98 150 130 140 C128 98 182 78 205 104 C226 78 288 88 292 134 C327 140 337 190 312 210 C333 236 317 282 281 281 C270 312 225 318 205 292 C180 318 128 307 124 276 C88 280 84 235 118 210 Z"/>
+    <g fill="none" stroke="#B3125F" stroke-opacity="0.5" stroke-width="7" stroke-linecap="round">
+      <path d="M205 108 C200 130 208 150 203 172"/>
+      <path d="M205 262 C210 274 202 284 205 292"/>
+      <path d="M132 142 C152 160 160 178 148 198"/>
+      <path d="M290 136 C266 154 256 172 264 196"/>
+      <path d="M120 212 C148 216 164 228 166 248"/>
+      <path d="M310 212 C282 216 264 230 260 252"/>
+      <path d="M150 262 C168 262 178 270 180 286"/>
+      <path d="M262 262 C246 262 236 270 232 286"/>
+    </g>
+  </g>
+  <g fill="#141416">
+    <rect x="165" y="196" width="19" height="50" rx="9.5" transform="rotate(-14 174 221)"/>
+    <rect x="224" y="196" width="19" height="50" rx="9.5" transform="rotate(-14 233 221)"/>
+  </g>
+</svg>

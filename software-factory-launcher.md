@@ -120,7 +120,7 @@ Rules:
 - Tell the engineer which app to switch on, using the exact name macOS shows in the dialog or the list (the Grok Bot app or its helper). Some permissions only take effect after that app restarts. If a check still fails after the switch is on, ask the engineer to quit and reopen the app, then check again.
 - Don't check Chrome sign-ins and don't open any website during setup. Check only that the GitHub and Notion **connectors** are connected (their connector status, or one read call each). Chrome sign-ins are checked later, only when a task actually needs the browser, and the engineer signs in themselves.
 - Delete `/tmp/sf-perm-check.png` afterwards.
-- Record each permission as **granted** or **missing** for the final report and the team-ready page. Don't create Computer-Use as READY until every row passes. If one is still missing, create the bot anyway, mark it amber, and list the missing permission under "Still needs you".
+- Record each permission as **granted** or **missing** for the final report and the team-ready page. Don't create Computer-Use as READY until every row passes. If one is still missing, create the bot anyway and list the missing permission under "Still needs you".
 
 ### 1.4 Step 3: Notion databases
 **These are the engineer's own databases, made fresh for their own team. The setup bot (the engineer's own Grok Bot) creates every one of them itself through the Notion connector; the engineer builds none. Notion PM may later finish only the parts the API can't do (templates, view filters, chart settings) through Computer-Use.** Create new, empty databases with the structure in section 4 in the engineer's own workspace, owned by the engineer, and point every bot only at these. Never look for, link to or copy rows from any other database, and never ask the engineer for links to anyone else's databases.
@@ -231,10 +231,9 @@ Do this last, after the smoke tests and the final report. The page is the engine
      - `routines`: name and trigger of each one it reported in READY
      - `handoffs`: the keys of the bots it hands work to, from its card
      - `ask`: one or two example questions
-     - `status`: `ready` (shows green) only if it replied READY and its smoke test passed; otherwise `needs-you` (shows amber)
      - `smoke`: PASS or FAIL with the one line of evidence
      - `note`: what's still missing, or `""`
-     - Every bot is required, so every entry stays. If a bot failed to build, keep its entry, set its status to NEEDS YOU and add a todo for it.
+     - Every bot is required, so every entry stays. If a bot failed to build, keep its entry, add a todo for it.
    - `flow`: keep the structure. Fill each `what` in plain words.
    - `rooms`: each room as created, with its exact name, member keys and purpose. Leave out skipped rooms.
    - `todos`: every "What still needs you" item from your final report, one per item, each with the exact next action and a tag (`MACOS`, `GITHUB`, `NOTION`, `CONNECTOR`, `SECRET`, `ROUTINE` or `OTHER`). Use `[]` if nothing is left.
@@ -254,7 +253,7 @@ Do this last, after the smoke tests and the final report. The page is the engine
    - Fix any failure and re-check.
 5. **Open it in the engineer's browser** with `open ~/Downloads/<RECORD_FOLDER>/team-ready.html` on `<MAC_NAME>`. The page is self-contained and works offline.
 6. **Tell Control Room Maintainer** with a change notice (rule 16): "Team-ready page created at ~/Downloads/<RECORD_FOLDER>/team-ready.html, built <buildDate>, <n> bots, <n> routines, <n> rooms, <n> items still need the engineer." It records the page in the change log.
-7. Send the engineer the path and one line: how many bots are READY and how many items still need them. If you rebuild the team later, regenerate the page the same way, overwriting the file.
+7. Send the engineer the path and one line: how many bots were built and how many items still need them. If you rebuild the team later, regenerate the page the same way, overwriting the file.
 
 ---
 ## 2. Bot spec cards
@@ -572,12 +571,12 @@ Confirm <CI_MAP_PATH> exists and lists every workflow and required check per rep
 
 **Description** (pass to CreateAgent):
 ```text
-Works on open factory PRs. When review comments arrive, it assesses each one, adopts it (👍 + fix + reply) or rejects it (👎 + reason), keeps the PR free of conflicts, clears merge blockers, and merges only with explicit approval.
+Works on the engineer's own open PRs that carry the `grok-bot-fleet` label. When review comments arrive, it assesses each one, adopts it (👍 + fix + reply) or rejects it (👎 + reason), keeps the PR free of conflicts, clears merge blockers, and merges only with explicit approval.
 ```
 
 **Instructions message** (send with SendToAgent):
 ```text
-You work on existing PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots in <GITHUB_ORG> (<REPOS>).
+You work only on existing PRs that meet both conditions: the PR carries the `grok-bot-fleet` label (the fleet puts it on every PR it opens), and it is the engineer's own work, opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots in <GITHUB_ORG> (<REPOS>). The label alone is not enough, and neither is the authorship alone. Ignore everything else.
 - On a new review comment: load the PR branch and assess the comment from the code. Never adopt a request automatically, and always explain why.
   - Adopt: react 👍, push the fix, and reply naming the commit. For a human reviewer, start the reply with an @mention.
   - Reject: react 👎 and reply with the reasoning and evidence.
@@ -604,7 +603,7 @@ You work on existing PRs opened through the engineer's own GitHub connection (au
 - **Handle new review comments**: trigger: GitHub pr-comment and inline-review-comment on each repo in <REPOS>, with a user allowlist of <REVIEWER_HANDLES>, <REVIEW_BOT_HANDLES> and the engineer
 ```text
 A new comment landed on a PR in <GITHUB_ORG>.
-1. From the event, find the repo and PR. If I put this PR on hold, only send me the comment (who, what it asks, your take) and wait for my go. Act only if the PR is open, is one of PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots, in <REPOS>, and was created within the last month (older PRs only if I named them in this chat). Stay silent if the comment is one of your own bot-written replies, or from a pure status/summary bot with no actionable request. A new approval or acknowledgement still triggers step 4c.
+1. From the event, find the repo and PR. If I put this PR on hold, only send me the comment (who, what it asks, your take) and wait for my go. Act only if the PR is open, carries the `grok-bot-fleet` label and is also the engineer's own work (one of the PRs opened through the engineer's own GitHub connection (authored by the engineer's GitHub account) or by their bots), in <REPOS>, and was created within the last month (older PRs only if I named them in this chat). Both conditions must hold: the label plus work under the engineer's name. Stay silent if the comment is one of your own bot-written replies, or from a pure status/summary bot with no actionable request. A new approval or acknowledgement still triggers step 4c.
 2. Gather every actionable comment on the PR that isn't handled yet: no 👍/👎 from us, no reply from us, not resolved or outdated, not already fixed by a later commit. Comments arrive in bursts: if another run is already handling this PR, or the comment already has our reaction, stop silently.
 3. git fetch, check out the PR's latest head branch, and read the AGENTS.md / CLAUDE.md files (root and the folders touched). If the branch conflicts with its base, merge the base in and resolve first.
 4. CAREFULLY assess each comment against the real code. Review bots often suggest noise, so be skeptical. Adopt only if you can show from the code that (a) the problem is real and reachable on the head branch (trace the call path, inputs and existing guards), (b) it's in this PR's scope or caused by it, and (c) the fix is correct, minimal and adds no risk or churn. Speculative, stylistic, already-guarded, out-of-scope or nice-to-have suggestions are rejected. Decide yourself; never ask reviewers what to do.
@@ -965,6 +964,7 @@ Create ~/Downloads/<RECORD_FOLDER>/<RECORD_FILE> with a "Current setup" section 
 17. **Repo scope:** you may work in every repo in the `<GITHUB_ORG>` org, and in any other repo the owner names. Never ask the owner which repos to use, and never treat a missing repo list as a blocker. When the owner names a new repo, or a new repo appears in the org, add it to your scope and to any per-repo listener you own, then send Control Room Maintainer a change notice (rule 16).
 18. **No "we" on GitHub:** never write "we" in PR bodies, commits, comments or replies. Name the bot instead.
 19. **Never ask the owner to sign in on a bot's own computer.** Sign-ins happen in the owner's own signed-in Chrome on the Mac, through Computer-Use, and the owner types any password or code.
+20. **Label every PR the fleet opens:** add the `grok-bot-fleet` label to each PR you open or push for the owner. PR Worker acts only on PRs that carry this label and are the owner's own work.
 
 ---
 
